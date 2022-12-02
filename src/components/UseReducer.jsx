@@ -2,60 +2,90 @@ import React from 'react';
 
 const SECURITY_CODE = 'paradigma';
 
-const UseState = ({name}) => {
-    const [state, setState] = React.useState({
-        value: '',
+const initialState = {
+    value: '',
+    error: false,
+    loading: false,
+    deleted: false,
+    confirmed: false,
+};
+
+const actionTypes = {
+    confirm: 'CONFIRM',
+    error: 'ERROR',
+    write: 'WRITE',
+    check: 'CHECK',
+    delete: 'DELETE',
+    reset: 'RESET'
+};
+
+const reducerObject = (state, payload) => ({
+    [actionTypes.confirm]: {
+        ...state,
+        loading: !state.loading,
+        confirmed: true,
+    },
+    [actionTypes.error]: {
+        ...state,
+        error: true,
+        loading: !state.loading
+    },
+    [actionTypes.write]: {
+        ...state,
+        value: payload
+    },
+    [actionTypes.check]: {
+        ...state,
         error: false,
-        loading: false,
+        loading: !state.loading
+    },
+    [actionTypes.delete]: {
+        ...state,
+        deleted: true, 
+    },
+    [actionTypes.reset]: {
+        ...state,
+        confirmed: false,
         deleted: false,
-        confirmed: false
-    });
+        value: ''
+    }
+    
+
+});
+
+const reducer = (state, action) => {
+    if(reducerObject(state)[action.type]) {
+        return reducerObject(state, action.payload)[action.type];
+    } else {
+        return state; 
+    }
+};
+
+const UseReducer = ({name}) => {
+    const [state, dispatch] = React.useReducer(reducer, initialState);
 
     const onConfirm = () => {
-        setState({
-            ...state,
-            loading: !state.loading,
-            confirmed: true,
-        });
+        dispatch({type: actionTypes.confirm})
     }
 
     const onError = () => {
-        setState({
-            ...state,
-            error: true,
-            loading: !state.loading
-        });
+        dispatch({type: actionTypes.error})
     }
 
     const onWrite = (newValue) => {
-        setState({
-            ...state,
-            value: newValue
-        });
+        dispatch({type: actionTypes.write, payload: newValue})
     }
 
     const onCheck = () => {
-        setState({
-            ...state,
-            error: false,
-            loading: !state.loading
-        })
+        dispatch({type: actionTypes.check})
     }
 
     const onDelete = () => {
-        setState({
-            ...state,
-            deleted: true,
-        });
+        dispatch({type: actionTypes.delete})
     }
 
     const onReset = () => {
-        setState({
-            ...state,
-            confirmed: false,
-            deleted: false,
-            value: ''
-        })
+        dispatch({type: actionTypes.reset})
     }
 
     React.useEffect(() => {
@@ -68,7 +98,7 @@ const UseState = ({name}) => {
                 if(state.value === SECURITY_CODE) {
                     onConfirm();
                 } else {
-                    onError(); 
+                    onError();
                 }
     
                 console.log('Ending validation');
@@ -102,10 +132,7 @@ const UseState = ({name}) => {
                     }}
                 />
                 
-                <button onClick={() => {
-                    onCheck();
-                }}
-                >Approve</button>
+                <button onClick={onCheck}>Approve</button>
             </div>
         );
     } else if (!!state.confirmed && !state.deleted) {
@@ -113,14 +140,10 @@ const UseState = ({name}) => {
             <React.Fragment>
                 <p>Confirm the action. Do you want to delete the code?</p>
                 <button
-                    onClick={() =>{
-                        onDelete();
-                    }}
+                    onClick={onDelete}
                 >Yes, delete</button>
                 <button
-                    onClick={() => {
-                        onReset();
-                    }}
+                    onClick={onReset}
                 >No, go back</button>
             </React.Fragment>
         );
@@ -129,9 +152,7 @@ const UseState = ({name}) => {
             <React.Fragment>
                 <p>Successfully deleted</p>
                 <button
-                    onClick={() => {
-                        onReset();
-                    }}
+                    onClick={onReset}
                 >Reset</button>
             </React.Fragment>
         );
@@ -139,4 +160,4 @@ const UseState = ({name}) => {
     
 };
 
-export { UseState };
+export { UseReducer };
